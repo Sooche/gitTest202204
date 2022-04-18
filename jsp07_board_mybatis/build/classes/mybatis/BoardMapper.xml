@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="BoardMapper">
+	<insert id="insert">
+	<!-- board에 bume 필드의 setter 실행 -->
+	<selectKey keyProperty="bnum" resultType="int" order="BEFORE">
+	SELECT S_BNUM.nextval FROM dual
+	</selectKey>
+	
+		INSERT INTO board(bnum,userid,subject,content,ip)
+		VALUES (#{bnum}, #{userid}, #{subject}, #{content}, #{ip})	
+	</insert>
+	
+	<update id="update">
+		UPDATE board
+		SET userid =#{userid},
+			subject = #{subject},
+			content =#{content},
+			ip = #{ip}
+		WHERE bnum = #{bnum}
+	</update>
+	<!-- 게시물의 조회수 +1 -->
+	<update id="update_readcnt">
+	UPDATE board
+	SET readcnt =readcnt+1 
+	WHERE bnum = #{bnum}
+	
+	</update>
+	
+	<delete id="delete">
+		DELETE FROM board
+		WHERE bnum =  #{bnum}
+	</delete>
+	
+	<!-- dto의 경로명까지 포함해서 resultType매핑 --> 
+	<select id="selectOne" resultType="dto.Board">
+		SELECT  * FROM board
+		WHERE bnum = #{bnum} 
+	</select>
+<!-- 	$ : 데이터자체만 연결
+	# : 데이터의 형에따라 '' 여부 결정 -->
+	<select id="selectList" resultType="dto.Board">
+		
+		SELECT *
+			FROM( SELECT ROWNUM rnum,b.*
+			      FROM(SELECT * FROM board
+				  WHERE ${findkey} LIKE '%'||#{findvalue}||'%'
+				     	 ORDER BY bnum DESC)b)
+		WHERE rnum BETWEEN #{startnum} AND #{endnum}
+	</select>
+	
+	<!-- 전체게시물수  -->
+	<select id="select_totalcnt" resultType ="int">
+	SELECT COUNT(*) totalCnt FROM board
+        WHERE ${findkey} LIKE '%'||#{findvalue}||'%'
+         
+	</select>
+	
+	
+</mapper>
